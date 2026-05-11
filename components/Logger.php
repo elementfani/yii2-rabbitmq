@@ -70,20 +70,16 @@ class Logger
         if (!$this->options['log']) {
             return;
         }
-        $extra['execution_time'] = isset($options['timeStart']) ? $this->getExecutionTime($options['timeStart']) : null;
-        $extra['return_code'] = $options['processFlag'] ?? null;
-        $extra['memory'] = isset($options['memory']) ? $this->getMemory() : null;
-        $extra['routing_key'] = $options['routingKey'] ?? null;
-        $extra['queue'] = $options['queue'] ?? null;
-        $extra['exchange'] = $options['exchange'] ?? null;
-        \Yii::info([
-            'info' => $title,
-            'amqp' => [
-                'body' => $msg->getBody(),
-                'headers' => $msg->has('application_headers') ? $msg->get('application_headers')->getNativeData() : null,
-                'extra' => $extra,
-            ],
-        ], $this->options['category']);
+        $context['execution_time'] = isset($options['timeStart']) ? $this->getExecutionTime($options['timeStart']) : null;
+        $context['return_code'] = $options['processFlag'] ?? null;
+        $context['memory'] = isset($options['memory']) ? $this->getMemory() : null;
+        $context['routing_key'] = $options['routingKey'] ?? null;
+        $context['queue'] = $options['queue'] ?? null;
+        $context['exchange'] = $options['exchange'] ?? null;
+        $context['body'] = $msg->getBody();
+        $context['headers'] = $msg->has('application_headers') ? $msg->get('application_headers')->getNativeData() : null;
+
+        \Yii::info(['message' => $title, 'context' => $context], $this->options['category']);
     }
 
     /**
@@ -96,10 +92,11 @@ class Logger
         if (!$this->options['log']) {
             return;
         }
+
         \Yii::error([
-            'msg' => $e->getMessage(),
-            'amqp' => [
-                'message' => $msg->getBody(),
+            'message' => $e->getMessage(),
+            'context' => [
+                'body' => $msg->getBody(),
                 'stacktrace' => $e->getTraceAsString(),
             ],
         ], $this->options['category']);
